@@ -16,3 +16,19 @@ end
 describe port(80), :skip do
   it { should_not be_listening }
 end
+
+%w( apache2 wget unzip mysql-server libapache2-mod-wsgi python-pip python-mysqldb ).each do |pkg|
+   describe package(pkg) do
+      it { should be_installed }
+   end
+end
+
+%w( apache2 mysql).each do |service|
+   describe service(service) do 
+      it { should be_running }
+   end
+end
+describe file('/tmp/master.zip') do
+  it { should exist }
+end
+
