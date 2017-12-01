@@ -1,9 +1,9 @@
 name 'ARR'
-maintainer 'The Authors'
+maintainer 'Damien O\'Neal'
 maintainer_email 'you@example.com'
 license 'All Rights Reserved'
-description 'Installs/Configures ARR'
-long_description 'Installs/Configures ARR'
+description 'Installs/Configures ARR website'
+long_description 'Installs/Configures ARR website that uses python framework + MYSQL as the database'
 version '0.1.0'
 chef_version '>= 12.1' if respond_to?(:chef_version)
 
