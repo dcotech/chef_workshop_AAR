@@ -84,8 +84,7 @@ end
 
 bash 'run script and manually restart apache' do
   code <<-EOH
-   cd /tmp/Awesome-Appliance-Repair-maste
-r
+   cd /tmp/Awesome-Appliance-Repair-master
    sudo python AARinstall.py
    EOH
   not_if { ::File.exist?('/var/www/AAR/AAR_config.py') }
