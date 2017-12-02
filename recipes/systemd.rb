@@ -14,7 +14,7 @@ elsif node['platform_family'] == "debian"
 	python_package = %w(libapache2-mod-wsgi python-pip python-mysqldb)
 end
 
-##################
+###################
 ## Apache resources
 ###################
 package 'apache2' do 
@@ -22,9 +22,9 @@ package 'apache2' do
 end
 
 
-###################################
+############################
 ## MySQL(/MariaDB) resources
-###################################
+############################
 package 'mysql' do
   package_name mysql_package
 end
@@ -41,7 +41,7 @@ end
 package 'python packages' do
   package_name python_package
   ignore_failure true #So the receipe can proceed foward in case the Debian repos do not respond. 
-		      #The AAR script will download the packages for Debian systems if the repos fail
+		      #The AAR script will download the python/utility packages for Debian systems if the repos fail
 end
 
 
@@ -58,9 +58,9 @@ remote_file '/tmp/master.zip' do
  action :create
 end
 
-########################################
-## Extracting and running the AAR script
-########################################
+##################################################################
+## Extracting and running the AAR script based off platform family
+##################################################################
 bash 'unzip master.zip' do
  code <<-EOH
    cd /tmp
@@ -79,10 +79,20 @@ cookbook_file '/tmp/Awesome-Appliance-Repair-master/AARinstall.py' do
  owner 'root'
  group 'root'
  mode '0755'
- not_if { ::File.exist?('var/www/AAR/AAR_config.py') }
+ only_if { node['platform_family'] == "rhel" }
 end
 
-bash 'run script and manually restart apache' do
+
+cookbook_file '/tmp/Awesome-Appliance-Repair-master/AARinstall.py' do
+  source 'AARinstall_ubuntu.py'
+  owner 'root'
+  group 'root'
+  mode '0755'
+  only_if { node['platform_family'] == "debian" }
+end
+
+
+bash 'runs the script' do
   code <<-EOH
    cd /tmp/Awesome-Appliance-Repair-master
    sudo python AARinstall.py
@@ -92,9 +102,10 @@ end
 
 ######################################################################################
 ## Starting of Apache Service. This is last to show the logical flow of the recipe and
-## to ensure proper order of execution o
+## to ensure proper order of execution of the receipe
 ######################################################################################
 service 'apache2' do
   action [:start, :enable]
   service_name apache
+  subscribes :reload, 'bash[runs the script]', :immediately
 end

@@ -1,74 +1,84 @@
-
+###############################################################################################################
+### variables - we have a variable because these packages needed to be installed first before we can
+### install pip and use the AAR script. Note this also differentiates the package names between platforms
+################################################################################################################
 if node['platform_family'] == "rhel"
         apache = "httpd"
-        mysql_package = "mariadb-server"
-	mysql_service = "mariadb"
+	mysql_service = "mysqld"
 	python_package = %w(mod_wsgi python-setuptools epel-release)
 	
 elsif node['platform_family'] == "debian"
         apache = "apache2"
-        mysql_package = "mysql-server"
 	mysql_service = "mysql"
-	python_package = %w(libapache2-mod-wsgi python-pip python-mysqldb)
+	python_package = %w(libapache2-mod-wsgi python-pip python-mysqldb wget)
 end
 
+###################
+### Apache resources
+####################
 package 'apache2' do
   package_name apache
 end
 
-package 'mysql' do
-  package_name mysql_package
-end
-
+###################################################################################################
+### Pre-requiste python packages + other core utilities. Note, for RHEL systems, the EPEL repostiory 
+### must be converged first before installing the other python packages
+####################################################################################################
 package 'python packages' do
   package_name python_package
-  ignore_failure true
+  ignore_failure true #So the receipe can proceed foward in case the Debian repos do not respond.
+		      #The AAR script will download the python/utility packages for Debian systems if the repos fail
 end
 
-package %w(python2-pip MySQL-python python-devel) do
+package %w(python-pip MySQL-python python-devel) do
   only_if { node['platform_family'] == "rhel" }
 end
 
-package %w(wget unzip) do
+
+package 'unzip' do #Add any platform agnostic utilities here
 end
 
 
-service 'httpd' do
-  #service_name apache
-  action [:enable, :start]
-  #not_if { node['platform_version'] <= "14.04"}
+###################
+### MySQL resources
+###################
+package 'mysql-server' do
 end
-
 
 service 'mysql' do
-  service_name mysql_service
-  action [:start, :enable]
-  only_if { node['platform_family'] == "rhel"}
+ service_name mysql_service
+ action [:enable, :start]
+ only_if { node['platform_family'] == "rhel" }
 end
 
-
-#bash 'start mysql/apache2 service on debian-based non-systemD systems' do
-#  code <<-EOH
-#    sudo service mysql start
-#    sudo service apache2 start
-#  EOH
-#  not_if { ::File.exist?('/tmp/Awesome-Appliance-') }
-#  end
-
+###################################################################################
+### Older Debian-based systems seem to have a problem with the service resource.
+### The bottom is a bash resource to issue the commands. When a solution is reached,
+### the service resource will be used for both platforms.
+####################################################################################
 bash 'start mysql/apache2 service on debian-based systems' do
   code <<-EOH
     sudo service mysql start
     sudo service apache2 start
   EOH
-  not_if { node['platform_family'] == "rhel" }
+  not_if { ::File.exist?('/var/www/AAR') }
 end
 
+###################################################################################
+### Downloading the AAR script. This is for the other WSGI/python utilites to ensure
+### the website functions 
+####################################################################################
 remote_file '/tmp/master.zip' do
   source 'https://github.com/colincam/Awesome-Appliance-Repair/archive/master.zip'
   mode '0755'
   action :create
 end
 
+
+#########################################################################################
+### Extracting and running the AAR script based off platform family for proper permissions
+### and directory placement
+##########################################################################################
 bash 'unzip master.zip' do
   code <<-EOH
     cd /tmp
@@ -99,7 +109,7 @@ cookbook_file '/tmp/Awesome-Appliance-Repair-master/AARinstall.py' do
   only_if { node['platform_family'] == "debian" }
 end
 
-bash 'run script' do
+bash 'run script and manual restart apache' do
   code <<-EOH
     cd /tmp/Awesome-Appliance-Repair-master
 
@@ -109,4 +119,14 @@ bash 'run script' do
    EOH
   not_if { ::File.exist?('/var/www/AAR/AAR_config.py') }
 end
+
+######################################################################################
+### Starting of Apache Service. This is last to show the logical flow of the recipe and
+### to ensure proper order of execution of the receipe
+#######################################################################################
+service 'apache' do
+  service_name apache
+  action [:enable, :start]
+end
+
 

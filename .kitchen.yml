@@ -17,7 +17,8 @@ platforms:
   #- name: ubuntu-16.04
    # driver:
       #platform: debian
-  - name: ubuntu-14.04
+ # - name: ubuntu-14.04
+ # - name: centos-6.9
   - name: centos-7
     driver:
       platform: rhel
@@ -31,12 +32,3 @@ suites:
       inspec_tests:
         - test/smoke/default
     attributes:
-suites:
-  - name: NonSystemD
-    run_list:
-      - recipe[ARR::non_systemd]
-    verifier:
-      inspec_tests:
-        - test/smoke/default
-    attributes:
-
