@@ -4,17 +4,34 @@
 #
 # Copyright:: 2017, The Authors, All Rights Reserved.
 #
-apt_package %w(apache2 wget unzip mysql-server) do 
+
+if node['platform_family'] == "rhel"
+	apache = "httpd"
+	mysql = "mariadb"
+elsif node['platform_family'] == "ubuntu"
+	apache = "apache2"
+	mysql = "mysql-server"
+end
+
+#apt_package %w(apache2 wget unzip mysql-server) do 
+#end
+
+package 'apache2' do 
+  package_name apache
+end
+
+package 'mysql' do
+  package_name mysql
 end
 
 
-bash 'start mysql/apache2 service' do
-  code <<-EOH
-    sudo service mysql start
+service 'apache2' do
+  action :start
+end
 
-    sudo service apache2 start
-  EOH
-  not_if { ::File.exist?('/var/www/AAR') }
+service 'mysql' do 
+  action :start
+#  start_command 'sudo service mysql start'
 end
 
 remote_file '/tmp/master.zip' do
@@ -24,7 +41,7 @@ remote_file '/tmp/master.zip' do
 end
 
 
-bash 'unzip master.zip and installing flask' do
+bash 'unzip master.zip' do
   code <<-EOH
     cd /tmp
 
