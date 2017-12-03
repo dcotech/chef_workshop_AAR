@@ -1,31 +1,15 @@
-###############################################################################################################
-### variables - we have a variable because these packages needed to be installed first before we can
-### install pip and use the AAR script. Note this also differentiates the package names between platforms
-################################################################################################################
-if node['platform_family'] == "rhel"
-        apache = "httpd"
-	mysql_service = "mysqld"
-	python_package = %w(mod_wsgi python-setuptools epel-release)
-	
-elsif node['platform_family'] == "debian"
-        apache = "apache2"
-	mysql_service = "mysql"
-	python_package = %w(libapache2-mod-wsgi python-pip python-mysqldb wget)
-end
 
 ###################
 ### Apache resources
 ####################
-package 'apache2' do
-  package_name apache
+package node["apache_package"] do
 end
 
 ###################################################################################################
 ### Pre-requiste python packages + other core utilities. Note, for RHEL systems, the EPEL repostiory 
 ### must be converged first before installing the other python packages
 ####################################################################################################
-package 'python packages' do
-  package_name python_package
+package node["python_packages"] do
   ignore_failure true #So the receipe can proceed foward in case the Debian repos do not respond.
 		      #The AAR script will download the python/utility packages for Debian systems if the repos fail
 end
@@ -42,11 +26,10 @@ end
 ###################
 ### MySQL resources
 ###################
-package 'mysql-server' do
+package node["mysql_package"] do
 end
 
-service 'mysql' do
- service_name mysql_service
+service node["mysql_service"] do
  action [:enable, :start]
  only_if { node['platform_family'] == "rhel" }
 end
@@ -124,8 +107,7 @@ end
 ### Starting of Apache Service. This is last to show the logical flow of the recipe and
 ### to ensure proper order of execution of the receipe
 #######################################################################################
-service 'apache' do
-  service_name apache
+service node["apache_service"] do
   action [:enable, :start]
 end
 
