@@ -19,4 +19,4 @@ chef_version '>= 12.1' if respond_to?(:chef_version)
 #
 # source_url 'https://github.com/<insert_org_here>/ARR'
 #
-depends 'mysql', '= 8.5.1'
+#depends 'mysql', '= 8.5.1'
