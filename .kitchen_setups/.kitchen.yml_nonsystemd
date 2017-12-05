@@ -14,27 +14,11 @@ verifier:
   name: inspec
 
 platforms:
-#  - name: ubuntu-16.04
-#    driver:
-#      platform: debian
   - name: ubuntu-14.04
-#  - name: centos-6.9
-#  - name: centos-7
     driver:
       platform: rhel
       run_command: /usr/lib/systemd/systemd
 
-suites:
-#  - name: SystemD
-#    run_list:
-#      - recipe[ARR::systemd]
-#    verifier:
-#      inspec_tests:
-#        - test/smoke/default
-#    attributes:
-#    exclude:
-#    - centos-6.9
-#    - ubuntu-14.04
 suites:
   - name: NonSystemD
     run_list:
@@ -46,6 +30,5 @@ suites:
     exclude:
     - centos-7
     - ubuntu-16.04
-    - centos-6.9
 
 
